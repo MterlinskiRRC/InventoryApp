@@ -56,16 +56,18 @@ jobs:
       # -------------------------
       # Deploy add_inventory_item
       # -------------------------
-      - name: Zip add_inventory_item
-        run: zip function.zip lambda_function.py
+      - name: Install and zip add_inventory_item with dependencies
+        run: |
+          pip install -r requirements.txt -t .
+          zip -r function.zip lambda_function.py python/
         working-directory: ./lambda/add_inventory_item
 
       - name: Update add_inventory_item
         run: aws lambda update-function-code --function-name add_inventory_item --zip-file fileb://function.zip --publish
         working-directory: ./lambda/add_inventory_item
 
-      - name: Cleanup zip
-        run: rm function.zip
+      - name: Cleanup zip and dependencies
+        run: rm -rf function.zip python/
         working-directory: ./lambda/add_inventory_item
 
       # -------------------------
