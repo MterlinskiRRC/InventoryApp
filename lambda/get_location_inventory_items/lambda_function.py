@@ -9,9 +9,24 @@ def lambda_handler(event, context):
     dynamo = boto3.resource('dynamodb')
     table = dynamo.Table('Inventory')
 
-    location_id = int(event['pathParameters']['id'])
-
     try:
+        # Handle path parameters - could be None or missing
+        path_params = event.get('pathParameters') or {}
+        location_id = path_params.get('id')
+        
+        if not location_id:
+            return {
+                'statusCode': 400,
+                'headers': {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+                    'Access-Control-Allow-Methods': 'GET,OPTIONS,POST,DELETE'
+                },
+                'body': json.dumps({'error': 'Missing location_id parameter'})
+            }
+        
+        location_id = int(location_id)
+
         response = table.query(
             IndexName='GSI_Inventory',
             KeyConditionExpression=Key('item_location_id').eq(location_id)
