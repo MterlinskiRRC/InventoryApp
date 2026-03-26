@@ -1,12 +1,267 @@
 <!DOCTYPE html>
-<html lang="">
-  <head>
-    <meta charset="utf-8">
-    <title>Inventory App</title>
-  </head>
-  <body>
-    <header></header>
-    <main>Hello world!</main>
-    <footer></footer>
-  </body>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inventory App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 16px;
+      line-height: 1.4;
+    }
+
+    h1, h2 {
+      margin-bottom: 8px;
+    }
+
+    section {
+      border: 1px solid #ddd;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    input {
+      padding: 6px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    #status {
+      margin: 12px 0;
+      font-weight: bold;
+    }
+
+    pre {
+      background: #f5f5f5;
+      padding: 12px;
+      overflow: auto;
+      min-height: 160px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Inventory App </h1>
+
+  <section>
+    <h2>API Settings</h2>
+    <div class="row">
+      <label for="baseUrl">API Base URL</label>
+      <input id="baseUrl" type="text" placeholder="https://abc123.execute-api.us-east-1.amazonaws.com/prod" />
+    </div>
+    <small>Example routes below assume your API uses <strong>/inventory</strong> style paths.</small>
+  </section>
+
+  <section>
+    <h2>Get All Items</h2>
+    <div class="row">
+      <label for="allPath">Path</label>
+      <input id="allPath" type="text" value="/inventory" />
+    </div>
+    <button id="getAllBtn" type="button">Get All</button>
+  </section>
+
+  <section>
+    <h2>Get Item by ID</h2>
+    <div class="row">
+      <label for="getByIdPath">Path Template</label>
+      <input id="getByIdPath" type="text" value="/inventory/{id}" />
+    </div>
+    <div class="row">
+      <label for="itemId">Item ID</label>
+      <input id="itemId" type="text" placeholder="uuid" />
+    </div>
+    <button id="getByIdBtn" type="button">Get Item</button>
+  </section>
+
+  <section>
+    <h2>Get Items by Location</h2>
+    <div class="row">
+      <label for="byLocationPath">Path Template</label>
+      <input id="byLocationPath" type="text" value="/inventory/location/{id}" />
+    </div>
+    <div class="row">
+      <label for="locationId">Location ID</label>
+      <input id="locationId" type="number" placeholder="1" />
+    </div>
+    <button id="getByLocationBtn" type="button">Get By Location</button>
+  </section>
+
+  <section>
+    <h2>Add Item</h2>
+    <div class="row">
+      <label for="addPath">Path</label>
+      <input id="addPath" type="text" value="/inventory" />
+    </div>
+    <div class="row">
+      <label for="addLocationId">item_location_id</label>
+      <input id="addLocationId" type="number" />
+    </div>
+    <div class="row">
+      <label for="addName">item_name</label>
+      <input id="addName" type="text" />
+    </div>
+    <div class="row">
+      <label for="addDescription">item_description</label>
+      <input id="addDescription" type="text" />
+    </div>
+    <div class="row">
+      <label for="addQty">item_qty_on_hand</label>
+      <input id="addQty" type="number" />
+    </div>
+    <div class="row">
+      <label for="addPrice">item_price</label>
+      <input id="addPrice" type="number" step="0.01" />
+    </div>
+    <button id="addBtn" type="button">Add Item</button>
+  </section>
+
+  <section>
+    <h2>Delete Item</h2>
+    <div class="row">
+      <label for="deletePath">Path Template</label>
+      <input id="deletePath" type="text" value="/inventory/{id}" />
+    </div>
+    <div class="row">
+      <label for="deleteItemId">Item ID</label>
+      <input id="deleteItemId" type="text" placeholder="uuid" />
+    </div>
+    <button id="deleteBtn" type="button">Delete Item</button>
+  </section>
+
+  <div id="status">Ready.</div>
+  <pre id="output">{}</pre>
+
+  <script>
+    const output = document.getElementById("output");
+    const status = document.getElementById("status");
+
+    function getBaseUrl() {
+      return document.getElementById("baseUrl").value.trim().replace(/\/$/, "");
+    }
+
+    function buildUrl(pathTemplate, idValue) {
+      const baseUrl = getBaseUrl();
+      if (!baseUrl) {
+        throw new Error("API Base URL is required.");
+      }
+
+      let path = pathTemplate.trim();
+      if (idValue !== undefined && idValue !== null) {
+        path = path.replace("{id}", encodeURIComponent(String(idValue)));
+      }
+      return `${baseUrl}${path}`;
+    }
+
+    function setOutput(data) {
+      output.textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function callApi(method, url, body) {
+      status.textContent = `${method} ${url}`;
+      try {
+        const response = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: body ? JSON.stringify(body) : undefined,
+        });
+
+        let parsed;
+        const text = await response.text();
+        try {
+          parsed = text ? JSON.parse(text) : null;
+        } catch {
+          parsed = text;
+        }
+
+        setOutput({
+          ok: response.ok,
+          status: response.status,
+          data: parsed,
+        });
+        status.textContent = response.ok ? "Success" : "Request failed";
+      } catch (error) {
+        status.textContent = "Network error";
+        setOutput({ error: error.message });
+      }
+    }
+
+    document.getElementById("getAllBtn").addEventListener("click", () => {
+      const path = document.getElementById("allPath").value;
+      callApi("GET", buildUrl(path));
+    });
+
+    document.getElementById("getByIdBtn").addEventListener("click", () => {
+      const path = document.getElementById("getByIdPath").value;
+      const itemId = document.getElementById("itemId").value.trim();
+      if (!itemId) {
+        setOutput({ error: "Item ID is required." });
+        return;
+      }
+      callApi("GET", buildUrl(path, itemId));
+    });
+
+    document.getElementById("getByLocationBtn").addEventListener("click", () => {
+      const path = document.getElementById("byLocationPath").value;
+      const locationId = document.getElementById("locationId").value.trim();
+      if (!locationId) {
+        setOutput({ error: "Location ID is required." });
+        return;
+      }
+      callApi("GET", buildUrl(path, locationId));
+    });
+
+    document.getElementById("addBtn").addEventListener("click", () => {
+      const path = document.getElementById("addPath").value;
+      const body = {
+        item_location_id: Number(document.getElementById("addLocationId").value),
+        item_name: document.getElementById("addName").value,
+        item_description: document.getElementById("addDescription").value,
+        item_qty_on_hand: Number(document.getElementById("addQty").value),
+        item_price: Number(document.getElementById("addPrice").value),
+      };
+
+      if (!body.item_name || !body.item_description) {
+        setOutput({ error: "item_name and item_description are required." });
+        return;
+      }
+
+      if (
+        Number.isNaN(body.item_location_id) ||
+        Number.isNaN(body.item_qty_on_hand) ||
+        Number.isNaN(body.item_price)
+      ) {
+        setOutput({ error: "location, qty, and price must be valid numbers." });
+        return;
+      }
+
+      callApi("POST", buildUrl(path), body);
+    });
+
+    document.getElementById("deleteBtn").addEventListener("click", () => {
+      const path = document.getElementById("deletePath").value;
+      const itemId = document.getElementById("deleteItemId").value.trim();
+      if (!itemId) {
+        setOutput({ error: "Item ID is required." });
+        return;
+      }
+      callApi("DELETE", buildUrl(path, itemId));
+    });
+  </script>
+</body>
 </html>
