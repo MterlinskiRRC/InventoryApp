@@ -1,6 +1,6 @@
 import boto3
 import json
-from ulid import ULID
+import uuid
 from decimal import Decimal
 
 def lambda_handler(event, context):
@@ -13,7 +13,7 @@ def lambda_handler(event, context):
     body = json.loads(event['body'])
 
     new_item = {
-        'item_id': str(ULID()),
+        'item_id': str(uuid.uuid4()),
         'item_location_id': Decimal(str(body['item_location_id'])),
         'item_name': body['item_name'],
         'item_description': body['item_description'],
