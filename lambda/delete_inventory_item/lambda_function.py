@@ -1,6 +1,5 @@
 import boto3
 import json
-from decimal import Decimal
 from boto3.dynamodb.conditions import Key
 
 def lambda_handler(event, context):
@@ -46,8 +45,8 @@ def lambda_handler(event, context):
 
         table.delete_item(
             Key={
-                'item_id': str(item['item_id']),
-                'item_location_id': Decimal(str(item['item_location_id']))
+                'item_id': item['item_id'],
+                'item_location_id': item['item_location_id']
             }
         )
 
