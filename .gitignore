@@ -1,0 +1,53 @@
+# .gitignore file for Python and IDE files
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Lambda deployment
+lambda_function.zip
+function.zip
+
+# AWS
+.aws/
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+
+# Environment
+.env
+.env.local
